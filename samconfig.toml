@@ -1,0 +1,13 @@
+version = 0.1
+[staging]
+[staging.deploy]
+[staging.deploy.parameters]
+stack_name = "campus-backend"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8js0712ike64"
+s3_prefix = "campus-backend"
+region = "eu-west-1"
+profile = "Atanur"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "ENV=\"Staging\""
+image_repositories = []

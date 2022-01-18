@@ -1,0 +1,408 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  campus-backend
+
+  Sample SAM Template for campus-backend
+
+Globals:
+  Function:
+    Timeout: 20
+    Environment:
+      Variables:
+        NODE_ENV: !Ref ENV
+    MemorySize: 256
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref EventLambdaSecurityGroup
+      SubnetIds:
+        - !Ref PrivateSubnet1
+Parameters:
+  ENV:
+    Description: ENV
+    Default: Staging
+    Type: String
+    AllowedValues:
+      - Production
+      - Staging
+    ConstraintDescription: must specify production or staging.
+Mappings:
+  VPC:
+    Region:
+      Staging: eu-west-1
+      Production: eu-west-1
+    CidrBlock:
+      Staging: "11.0.0.0/16"
+      Production: "12.0.0.0/16"
+    PublicSubnetIpBlocks:
+      Staging: "11.0.1.0/24,11.0.2.0/24"
+      Production: "12.0.1.0/24,12.0.2.0/24"
+    PrivateSubnetIpBlocks:
+      Staging: "11.0.6.0/24,11.0.7.0/24"
+      Production: "12.0.6.0/24,12.0.7.0/24"
+  BucketNames:
+    Website:
+      Staging: "ecampus-webportal"
+      Production: "ecampus-webportal-production"
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [VPC, CidrBlock, !Ref ENV]
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["VPC", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Internet Gateway", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        !Select [
+          0,
+          !Split [",", !FindInMap [VPC, PublicSubnetIpBlocks, !Ref ENV]],
+        ]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Public Subnet 1", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        !Select [
+          1,
+          !Split [",", !FindInMap [VPC, PublicSubnetIpBlocks, !Ref ENV]],
+        ]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Public Subnet 2", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        !Select [
+          0,
+          !Split [",", !FindInMap [VPC, PrivateSubnetIpBlocks, !Ref ENV]],
+        ]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Private Subnet 1", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        !Select [
+          1,
+          !Split [",", !FindInMap [VPC, PrivateSubnetIpBlocks, !Ref ENV]],
+        ]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Private Subnet 2", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Public Route Table", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  NatGWIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["NatGateway EIP", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt
+        - NatGWIP
+        - AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["NatGateway", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Private Route Table", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+  PrivateSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "tracking-lambda-execution-role"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Path: /
+  EventLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [" ", ["Event Lambda Security Group", !Ref ENV]]
+      GroupDescription: !Join [" ", ["Event Lambda Security Group", !Ref ENV]]
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          CidrIp: !FindInMap [VPC, CidrBlock, !Ref ENV]
+          FromPort: 80
+          ToPort: 80
+        - IpProtocol: "tcp"
+          CidrIp: !FindInMap [VPC, CidrBlock, !Ref ENV]
+          FromPort: 443
+          ToPort: 443
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+          FromPort: 0
+          ToPort: 65535
+      Tags:
+        - Key: Name
+          Value: !Join [" ", ["Event Lambda Security Group", !Ref ENV]]
+        - Key: Environment
+          Value: !Ref ENV
+  CampusApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref ENV
+      Cors:
+        AllowCredentials: false
+        AllowMethods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: UserCustomAuthorizer
+        Authorizers:
+          UserCustomAuthorizer:
+            FunctionArn: !GetAtt UserCustomAuthorizerFunction.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              Headers:
+                - Authorization
+              ReauthorizeEvery: 0
+        AddDefaultAuthorizerToCorsPreflight: false
+
+  UserCustomAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["UserCustomAuthorizerFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: user.lambdaAuthorizer
+      Runtime: nodejs14.x
+  SignUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["SignUpFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: user.signup
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /signup
+            Method: post
+
+  UsersTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: "Users"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      # GlobalSecondaryIndexes:
+      #   - IndexName: emailIndex
+      #     KeySchema:
+      #       - AttributeName: email
+      #         KeyType: HASH
+      #     Projection:
+      #       ProjectionType: ALL
+
+  # WebsiteBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     AccessControl: PublicRead
+  #     BucketName: !FindInMap [BucketNames, Website, !Ref ENV]
+  #     Tags:
+  #       - Key: Name
+  #         Value: "Campus-Website"
+  # WebsiteBucketPolicy:
+  #   Type: "AWS::S3::BucketPolicy"
+  #   Properties:
+  #     Bucket: !Ref WebsiteBucket
+  #     PolicyDocument:
+  #       Statement:
+  #         - Action:
+  #             - "s3:GetObject"
+  #           Effect: Allow
+  #           Resource:
+  #             "Fn::Join":
+  #               - ""
+  #               - - "arn:aws:s3:::"
+  #                 - Ref: WebsiteBucket
+  #                 - /*
+  #           Principal: "*"
+
+  # MoodWebsiteCloudFrontDistribution:
+  #   Type: AWS::CloudFront::Distribution
+  #   Properties:
+  #     DistributionConfig:
+  #       CustomErrorResponses:
+  #         - ErrorCachingMinTTL: 60
+  #           ErrorCode: 404
+  #           ResponseCode: 200
+  #           ResponsePagePath: "/index.html"
+  #       CacheBehaviors:
+  #         - AllowedMethods:
+  #             - GET
+  #             - HEAD
+  #             - OPTIONS
+  #           CachedMethods:
+  #             - GET
+  #             - HEAD
+  #             - OPTIONS
+  #           Compress: true
+  #           DefaultTTL: 3600
+  #           MaxTTL: 86400
+  #           MinTTL: 60
+  #           ViewerProtocolPolicy: redirect-to-https
+  #           PathPattern: /
+  #           TargetOriginId: campusWebsiteOrigin
+  #           ForwardedValues:
+  #             Cookies:
+  #               Forward: none
+  #             QueryString: true
+  #       Comment: Campus Website
+  #       DefaultCacheBehavior:
+  #         AllowedMethods:
+  #           - GET
+  #           - HEAD
+  #           - OPTIONS
+  #         CachedMethods:
+  #           - GET
+  #           - HEAD
+  #           - OPTIONS
+  #         Compress: true
+  #         DefaultTTL: 3600
+  #         MaxTTL: 86400
+  #         MinTTL: 60
+  #         TargetOriginId: campusWebsiteOrigin
+  #         ViewerProtocolPolicy: redirect-to-https
+  #         ForwardedValues:
+  #           Cookies:
+  #             Forward: none
+  #           QueryString: true
+  #       DefaultRootObject: index.html
+  #       Enabled: true
+  #       HttpVersion: http2
+  #       PriceClass: "PriceClass_All"
+  #       Origins:
+  #         - Id: campusWebsiteOrigin
+  #           DomainName:
+  #             !Join [
+  #               "",
+  #               [
+  #                 !FindInMap [BucketNames, Website, !Ref ENV],
+  #                 ".s3.",
+  #                 !Ref AWS::Region,
+  #                 ".amazonaws.com",
+  #               ],
+  #             ]
+  #           CustomOriginConfig:
+  #             OriginProtocolPolicy: "http-only"
