@@ -160,13 +160,13 @@ exports.signin = async (event) => {
         expiresIn: "30 days",
       });
       return checkUser.Items[0].password === password
-        ? generateResponse.send({
+        ? (response = generateResponse.send({
             userId: checkUser.Items[0].userId,
             email: checkUser.Items[0].email,
             role: checkUser.Items[0].role,
             token: token,
-          })
-        : generateResponse.message("Incorrect password!").send();
+          }))
+        : (response = generateResponse.message("Incorrect password!").send());
     } else {
       response = generateResponse
         .message("No registered user found with this e-mail!")
