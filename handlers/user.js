@@ -137,6 +137,7 @@ exports.signup = async (event) => {
 
 exports.signin = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { email, password } = JSON.parse(event.body);
 
   const checkParams = {
@@ -150,34 +151,34 @@ exports.signin = async (event) => {
 
   try {
     const checkUser = await documentClient.query(checkParams).promise();
+
     if (checkUser.Items[0]) {
-      if (checkUser.Items[0].password !== password) {
-        return (response = generateResponse
-          .message("Incorrect password!")
-          .send());
+      if (checkUser.Items[0].password === password) {
+        const tokenObj = {
+          userId: checkUser.Items[0].userId,
+          email: checkUser.Items[0].email,
+          role: checkUser.Items[0].role,
+        };
+        const token = jwt.sign(tokenObj, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "30 days",
+        });
+        response = zr.send({
+          userId: checkUser.Items[0].userId,
+          email: checkUser.Items[0].email,
+          role: checkUser.Items[0].role,
+          token: token,
+        });
+      } else {
+        response = zr.message("Incorrect password!").send();
       }
-      const tokenObj = {
-        userId: checkUser.Items[0].userId,
-        email: checkUser.Items[0].email,
-        role: checkUser.Items[0].role,
-      };
-      const token = jwt.sign(tokenObj, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "30 days",
-      });
-      response = generateResponse.send({
-        userId: checkUser.Items[0].userId,
-        email: checkUser.Items[0].email,
-        role: checkUser.Items[0].role,
-        token: token,
-      });
     } else {
-      response = generateResponse
+      response = zr
         .message("No registered user found with this e-mail!")
         .send();
     }
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be signin due to connection issues to the Campus Services!"
       )
