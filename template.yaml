@@ -422,6 +422,79 @@ Resources:
             Path: /courses
             Method: get
 
+  RequestDormitoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["RequestDormitoryFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: dormitory.add
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /dormitory/request
+            Method: post
+  GetRequestByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["GetRequestByIdFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: dormitory.getById
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /dormitory/{userId}
+            Method: get
+  GetRequestByParametersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["GetRequestByParametersFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: dormitory.getByParameters
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /dormitory
+            Method: get
+  ApproveDormRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["ApproveDormRequestFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: dormitory.approve
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /dormitory/approve/{userId}
+            Method: patch
+
   UsersTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
@@ -483,11 +556,24 @@ Resources:
       TableName: "Dormitories"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: dormitoryId
+        - AttributeName: userId
           AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: capacity
+          AttributeType: N
       KeySchema:
-        - AttributeName: dormitoryId
+        - AttributeName: userId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "typeIndex"
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: capacity
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
   FinanceTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
