@@ -150,13 +150,12 @@ exports.signin = async (event) => {
 
   try {
     const checkUser = await documentClient.query(checkParams).promise();
-    if (!checkUser.Items[0]) {
-      response = generateResponse
-        .message("No registered user found with this e-mail!")
-        .send();
-    } else if (checkUser.Items[0].password !== password) {
-      response = generateResponse.message("Incorrect password!").send();
-    } else {
+    if (checkUser.Items[0]) {
+      if (checkUser.Items[0].password !== password) {
+        return (response = generateResponse
+          .message("Incorrect password!")
+          .send());
+      }
       const tokenObj = {
         userId: checkUser.Items[0].userId,
         email: checkUser.Items[0].email,
@@ -171,6 +170,10 @@ exports.signin = async (event) => {
         role: checkUser.Items[0].role,
         token: token,
       });
+    } else {
+      response = generateResponse
+        .message("No registered user found with this e-mail!")
+        .send();
     }
   } catch (error) {
     console.log(error);
