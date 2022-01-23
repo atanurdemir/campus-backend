@@ -265,6 +265,7 @@ Resources:
               ReauthorizeEvery: 0
         AddDefaultAuthorizerToCorsPreflight: false
 
+  #UserFunctions
   UserCustomAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -385,6 +386,7 @@ Resources:
             Path: /admin/update/{userId}
             Method: patch
 
+  #DepartmentFunctions
   AddCoursesFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -422,6 +424,63 @@ Resources:
             Path: /courses
             Method: get
 
+  #CafeteriaFunctions
+  AddCafeteriaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["AddCafeteriaFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.add
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeteria/add
+            Method: post
+  ReserveCafeteriaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["ReserveCafeteriaFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.reserve
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeteria/reserve
+            Method: patch
+  CafeteriaGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["CafeteriaGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.get
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeteria
+            Method: get
+
+  #DormitoryFunctions
   RequestDormitoryFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -494,6 +553,80 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /dormitory/approve/{userId}
             Method: patch
+
+  #FinanceFunctions
+  AddStudentFinanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["AddStudentFinanceFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: finance.add
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /finance/add
+            Method: patch
+  GetStudentFinanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["GetStudentFinanceFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: finance.get
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /finance/{userId}
+            Method: get
+  GetUnpaidFinanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["GetUnpaidFinanceFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: finance.getUnpaids
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /finance/unpaid
+            Method: get
+  ApproveFinancialStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["ApproveFinancialStatusFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: finance.approve
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /finance/approve/{userId}
+            Method: get
 
   UsersTable:
     Type: "AWS::DynamoDB::Table"
@@ -582,9 +715,18 @@ Resources:
       AttributeDefinitions:
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: isPaid
+          AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "paidIndex"
+          KeySchema:
+            - AttributeName: isPaid
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
   CafeteriaTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
