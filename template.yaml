@@ -572,7 +572,7 @@ Resources:
           Properties:
             RestApiId: !Ref CampusApi
             Path: /finance/add
-            Method: patch
+            Method: post
   GetStudentFinanceFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -626,7 +626,7 @@ Resources:
           Properties:
             RestApiId: !Ref CampusApi
             Path: /finance/approve/{userId}
-            Method: get
+            Method: patch
 
   UsersTable:
     Type: "AWS::DynamoDB::Table"
