@@ -464,7 +464,7 @@ Resources:
         - AttributeName: name
           AttributeType: S
         - AttributeName: semester
-          AttributeType: S
+          AttributeType: N
       KeySchema:
         - AttributeName: departmentId
           KeyType: HASH

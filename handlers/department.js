@@ -9,7 +9,7 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 
 exports.add = async (event) => {
   let response;
-  const { name, semester, courses } = JSON.parse(event.body);
+  const { name, courses, semester } = JSON.parse(event.body);
   const params = {
     TableName: "Departments",
     Item: {
@@ -24,7 +24,7 @@ exports.add = async (event) => {
     await documentClient.put(params).promise();
     response = generateResponse.send({});
   } catch (error) {
-    console.log(error);
+    console.log(JSON.stringify(error));
     response = generateResponse
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
@@ -36,21 +36,24 @@ exports.add = async (event) => {
 
 exports.get = async (event) => {
   let response;
-  const { name, semester } = JSON.parse(event.body);
+  const { name, semester } = event.queryStringParameters;
   const params = {
     TableName: "Departments",
     IndexName: "departmentIndex",
-    KeyConditionExpression: "name = :na AND semester = :se ",
+    KeyConditionExpression: "#name = :na AND semester = :se ",
+    ExpressionAttributeNames: {
+      "#name": "name",
+    },
     ExpressionAttributeValues: {
       ":na": name,
-      ":se": semester,
+      ":se": Number(semester),
     },
   };
   try {
     const res = await documentClient.query(params).promise();
     response = generateResponse.send({ data: res.Items });
   } catch (error) {
-    console.log(error);
+    console.log(JSON.stringify(error));
     response = generateResponse
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
