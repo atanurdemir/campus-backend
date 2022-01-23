@@ -150,7 +150,13 @@ exports.signin = async (event) => {
 
   try {
     const checkUser = await documentClient.query(checkParams).promise();
-    if (checkUser.Items[0]) {
+    if (!checkUser.Items[0]) {
+      response = generateResponse
+        .message("No registered user found with this e-mail!")
+        .send();
+    } else if (checkUser.Items[0].password !== password) {
+      response = generateResponse.message("Incorrect password!").send();
+    } else {
       const tokenObj = {
         userId: checkUser.Items[0].userId,
         email: checkUser.Items[0].email,
@@ -159,18 +165,12 @@ exports.signin = async (event) => {
       const token = jwt.sign(tokenObj, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "30 days",
       });
-      return checkUser.Items[0].password === password
-        ? (response = generateResponse.send({
-            userId: checkUser.Items[0].userId,
-            email: checkUser.Items[0].email,
-            role: checkUser.Items[0].role,
-            token: token,
-          }))
-        : (response = generateResponse.message("Incorrect password!").send());
-    } else {
-      response = generateResponse
-        .message("No registered user found with this e-mail!")
-        .send();
+      response = generateResponse.send({
+        userId: checkUser.Items[0].userId,
+        email: checkUser.Items[0].email,
+        role: checkUser.Items[0].role,
+        token: token,
+      });
     }
   } catch (error) {
     console.log(error);
