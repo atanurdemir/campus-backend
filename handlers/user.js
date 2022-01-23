@@ -9,14 +9,60 @@ const jwt = require("jsonwebtoken");
 const generateResponse = require("./response");
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
-function generatePolicy(principalId, effect, resource, decryptedToken) {
-  const authResponse = {};
+exports.lambdaAuthorizer = (event, context, callback) => {
+  var headers = event.headers;
+  var queryStringParameters = event.queryStringParameters;
+  var pathParameters = event.pathParameters;
+  var stageVariables = event.stageVariables;
+
+  // Parse the input for the parameter values
+  var tmp = event.methodArn.split(":");
+  var apiGatewayArnTmp = tmp[5].split("/");
+  var awsAccountId = tmp[4];
+  var region = tmp[3];
+  var restApiId = apiGatewayArnTmp[0];
+  var stage = apiGatewayArnTmp[1];
+  var method = apiGatewayArnTmp[2];
+  var resource = "/";
+  if (apiGatewayArnTmp[3]) {
+    resource += apiGatewayArnTmp[3];
+  }
+  var authResponse = {};
+  var condition = {};
+  condition.IpAddress = {};
+
+  if (headers.Authorization !== "") {
+    let decryptedToken = {
+      userId: "null",
+      email: "null",
+    };
+    if (headers.Authorization !== "public") {
+      try {
+        const data = jwt.verify(
+          headers.Authorization,
+          process.env.ACCESS_TOKEN_SECRET
+        );
+        decryptedToken = data;
+      } catch (e) {
+        callback("Unauthorized");
+      }
+    } else {
+      //TODO: put here public urls
+    }
+    callback(null, generateAllow("me", event.methodArn, decryptedToken));
+  } else {
+    callback("Unauthorized");
+  }
+};
+
+var generatePolicy = function (principalId, effect, resource, decryptedToken) {
+  var authResponse = {};
   authResponse.principalId = principalId;
   if (effect && resource) {
-    const policyDocument = {};
+    var policyDocument = {};
     policyDocument.Version = "2012-10-17";
     policyDocument.Statement = [];
-    const statementOne = {};
+    var statementOne = {};
     statementOne.Action = "execute-api:Invoke";
     statementOne.Effect = effect;
     statementOne.Resource = resource;
@@ -25,45 +71,13 @@ function generatePolicy(principalId, effect, resource, decryptedToken) {
   }
   authResponse.context = {
     userId: decryptedToken.userId,
-    username: decryptedToken.username,
-    azerionConnectId: decryptedToken.azerionConnectId,
+    email: decryptedToken.email,
   };
   return authResponse;
-}
+};
 
-function generateAllow(principalId, resource, decryptedToken) {
+var generateAllow = function (principalId, resource, decryptedToken) {
   return generatePolicy(principalId, "Allow", resource, decryptedToken);
-}
-
-exports.lambdaAuthorizer = (event, context, callback) => {
-  const { headers } = event;
-  const condition = {};
-  condition.IpAddress = {};
-
-  if (headers.Authorization !== "") {
-    let decryptedToken = {
-      userId: null,
-      email: null,
-    };
-    if (headers.Authorization !== "public") {
-      try {
-        const data = JWTService.verifyToken(headers.Authorization);
-        decryptedToken = data;
-      } catch (e) {
-        console.log("headers", headers, process.env.ACCESS_TOKEN_SECRET);
-        callback("Unauthorized", headers.Authorization);
-      }
-    } else {
-      // TODO: put here public urls
-    }
-    // elastic search sample data output
-    console.log(event);
-    console.log(decryptedToken);
-    callback(null, generateAllow("me", event.methodArn, decryptedToken));
-  } else {
-    console.log("headers", headers);
-    callback("Unauthorized");
-  }
 };
 
 exports.signup = async (event) => {
@@ -157,7 +171,6 @@ exports.signin = async (event) => {
         const tokenObj = {
           userId: checkUser.Items[0].userId,
           email: checkUser.Items[0].email,
-          role: checkUser.Items[0].role,
         };
         const token = jwt.sign(tokenObj, process.env.ACCESS_TOKEN_SECRET, {
           expiresIn: "30 days",
