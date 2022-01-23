@@ -385,6 +385,43 @@ Resources:
             Path: /admin/update/{userId}
             Method: patch
 
+  AddCoursesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["AddCoursesFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: department.add
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /courses/add
+            Method: post
+  CoursesGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["CoursesGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: department.get
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /courses
+            Method: get
+
   UsersTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
@@ -424,9 +461,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: departmentId
           AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+        - AttributeName: semester
+          AttributeType: S
       KeySchema:
         - AttributeName: departmentId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "departmentIndex"
+          KeySchema:
+            - AttributeName: name
+              KeyType: HASH
+            - AttributeName: semester
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
   DormitoryTable:
     Type: "AWS::DynamoDB::Table"
     Properties:

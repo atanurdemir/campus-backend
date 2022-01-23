@@ -83,12 +83,13 @@ var generateAllow = function (principalId, resource, decryptedToken) {
 exports.signup = async (event) => {
   let response;
   const {
+    uni,
     idNo,
     email,
     place,
     family,
     health,
-    password,
+    teacher,
     lastName,
     emergency,
     firstName,
@@ -109,18 +110,20 @@ exports.signup = async (event) => {
   const params = {
     TableName: "Users",
     Item: {
+      uni,
       idNo,
       place,
       email,
       family,
       health,
-      password,
+      teacher,
       lastName,
       firstName,
       emergency,
       highSchool,
       personalInfo,
       universityExam,
+      password: idNo,
       userId: uuid4(),
       role: "Student",
       createAt: moment().utc().format(),
