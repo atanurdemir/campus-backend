@@ -329,7 +329,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref CampusApi
-            Path: /user/{userId}
+            Path: /user/{email}
             Method: get
   UserGetMeFunction:
     Type: AWS::Serverless::Function

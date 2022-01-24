@@ -82,6 +82,7 @@ var generateAllow = function (principalId, resource, decryptedToken) {
 
 exports.signup = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const {
     uni,
     idNo,
@@ -133,17 +134,17 @@ exports.signup = async (event) => {
   try {
     const checkUser = await documentClient.query(checkParams).promise();
     if (checkUser.Items.length) {
-      return (response = generateResponse
+      response = zr
         .message(
           "The e-mail you entered is already in use, please select an alternative."
         )
-        .send());
+        .send();
     }
     await documentClient.put(params).promise();
-    response = generateResponse.send();
+    response = zr.send();
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be signup due to connection issues to the Campus Services."
       )
@@ -205,16 +206,18 @@ exports.signin = async (event) => {
 
 exports.get = async (event) => {
   let response;
-  const { userId } = event.pathParameters;
+  const { email } = event.pathParameters;
   const params = {
     TableName: "Users",
-    Key: {
-      userId,
+    IndexName: "emailIndex",
+    KeyConditionExpression: "email = :e",
+    ExpressionAttributeValues: {
+      ":e": email,
     },
   };
   try {
-    const res = await documentClient.get(params).promise();
-    response = generateResponse.send({ data: res.Item });
+    const res = await documentClient.query(params).promise();
+    response = generateResponse.send({ data: res.Items });
   } catch (error) {
     console.log(error);
     response = generateResponse
