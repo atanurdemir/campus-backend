@@ -277,24 +277,6 @@ Resources:
       CodeUri: handlers/
       Handler: user.lambdaAuthorizer
       Runtime: nodejs14.x
-  SignUpFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Join ["", ["SignUpFunction", !Ref ENV]]
-      Role:
-        Fn::GetAtt:
-          - LambdaExecutionRole
-          - Arn
-      CodeUri: handlers/
-      Handler: user.signup
-      Runtime: nodejs14.x
-      Events:
-        Root:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CampusApi
-            Path: /signup
-            Method: post
   SignInFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -313,24 +295,6 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /signin
             Method: post
-  UserGetFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Join ["", ["UserGetFunction", !Ref ENV]]
-      Role:
-        Fn::GetAtt:
-          - LambdaExecutionRole
-          - Arn
-      CodeUri: handlers/
-      Handler: user.get
-      Runtime: nodejs14.x
-      Events:
-        Root:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CampusApi
-            Path: /user/{email}
-            Method: get
   UserGetMeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -367,6 +331,44 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /user/update
             Method: patch
+
+  #AdminFunctions
+  SignUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["SignUpFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: admin.signup
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /signup
+            Method: post
+  StudentGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["StudentGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: admin.getStudent
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /user/{email}
+            Method: get
   UpdateStudentFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -376,7 +378,7 @@ Resources:
           - LambdaExecutionRole
           - Arn
       CodeUri: handlers/
-      Handler: user.updateStudent
+      Handler: admin.updateStudent
       Runtime: nodejs14.x
       Events:
         Root:
