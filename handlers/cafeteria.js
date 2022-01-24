@@ -69,7 +69,7 @@ exports.reserve = async (event) => {
   const params = {
     TableName: "Cafeterias",
     Key: {
-      cafeteriaId: moment().utc().format("YYYY-MM-DD") + name,
+      cafeteriaId: name + "?" + moment().utc().format("YYYY-MM-DD"),
     },
     UpdateExpression: "set reserved = reserved + :num",
     ExpressionAttributeValues: {
