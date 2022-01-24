@@ -32,6 +32,35 @@ exports.add = async (event) => {
   return response;
 };
 
+exports.addCron = async () => {
+  let response;
+  const names = ["Dining Hall", "Starbucks"];
+  const params = {
+    TableName: "Cafeterias",
+    Item: {
+      reserved: 0,
+      capacity: 30,
+      createAt: moment().utc().format(),
+    },
+  };
+  try {
+    for (let i = 0; i < 2; i++) {
+      params.Item["cafeteriaId"] =
+        names[i] + "?" + moment().utc().format("YYYY-MM-DD");
+      await documentClient.put(params).promise();
+    }
+    response = generateResponse.send({});
+  } catch (error) {
+    console.log(JSON.stringify(error));
+    response = generateResponse
+      .message(
+        "User could not be accessed due to connection issues to the Campus Services!"
+      )
+      .send();
+  }
+  return response;
+};
+
 exports.reserve = async (event) => {
   let response;
   const { name } = JSON.parse(event.body);

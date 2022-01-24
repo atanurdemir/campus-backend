@@ -443,6 +443,22 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /cafeteria/add
             Method: post
+  CafeteriaCronFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["CafeteriaCronFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.addCron
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Schedule
+          Properties:
+            Schedule: cron(00 06 * * ? *)
   ReserveCafeteriaFunction:
     Type: AWS::Serverless::Function
     Properties:
