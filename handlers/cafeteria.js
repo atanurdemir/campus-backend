@@ -12,10 +12,11 @@ exports.add = async (event) => {
   const params = {
     TableName: "Cafeterias",
     Item: {
-      cafeteriaId: moment().utc().format("YYYY-MM-DD") + name,
+      cafeteriaId: name + "?" + moment().utc().format("YYYY-MM-DD"),
+      name: name,
       reserved: 0,
       capacity: 30,
-      createAt: moment().utc().format(),
+      createAt: moment().utc().format("YYYY-MM-DD"),
     },
   };
   try {
@@ -40,13 +41,14 @@ exports.addCron = async () => {
     Item: {
       reserved: 0,
       capacity: 30,
-      createAt: moment().utc().format(),
+      createAt: moment().utc().format("YYYY-MM-DD"),
     },
   };
   try {
     for (let i = 0; i < 2; i++) {
       params.Item["cafeteriaId"] =
         names[i] + "?" + moment().utc().format("YYYY-MM-DD");
+      params.Item["name"] = names[i];
       await documentClient.put(params).promise();
     }
     response = generateResponse.send({});
@@ -92,9 +94,17 @@ exports.get = async () => {
   let response;
   const params = {
     TableName: "Cafeterias",
+    IndexName: "dateIndex",
+    KeyConditionExpression: "#createAt = :at",
+    ExpressionAttributeNames: {
+      "#createAt": "createAt",
+    },
+    ExpressionAttributeValues: {
+      ":at": moment().utc().format("YYYY-MM-DD"),
+    },
   };
   try {
-    const res = await documentClient.scan(params).promise();
+    const res = await documentClient.query(params).promise();
     response = generateResponse.send({ data: res.Items });
   } catch (error) {
     console.log(error);

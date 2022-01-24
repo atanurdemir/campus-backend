@@ -751,9 +751,18 @@ Resources:
       AttributeDefinitions:
         - AttributeName: cafeteriaId
           AttributeType: S
+        - AttributeName: createAt
+          AttributeType: S
       KeySchema:
         - AttributeName: cafeteriaId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "dateIndex"
+          KeySchema:
+            - AttributeName: createAt
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   # WebsiteBucket:
   #   Type: AWS::S3::Bucket
