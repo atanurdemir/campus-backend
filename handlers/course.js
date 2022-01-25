@@ -17,7 +17,7 @@ exports.add = async (event) => {
   const checkParams = {
     TableName: "Courses",
     IndexName: "nameIndex",
-    KeyConditionExpression: "courseName = :nö",
+    KeyConditionExpression: "courseName = :nm",
     ExpressionAttributeValues: {
       ":nm": courseName,
     },
@@ -35,8 +35,8 @@ exports.add = async (event) => {
     },
   };
   try {
-    const res = await documentClient.query(params).promise();
-    if (!res.Items.data) {
+    const res = await documentClient.query(checkParams).promise();
+    if (res.count === 0) {
       await documentClient.put(params).promise();
       response = zr.send({});
     } else {
@@ -83,23 +83,20 @@ exports.getById = async (event) => {
 
 exports.remove = async (event) => {
   let response;
-  const { courseId } = event.pathParameters;
   const { userId } = event.requestContext.authorizer;
+  const { courseId } = event.pathParameters;
   const params = {
     TableName: "Courses",
     Key: {
       courseId,
     },
-    ConditionExpression: "#userId = :ui",
-    ExpressionAttributeNames: {
-      "#userId": "userId",
-    },
+    ConditionExpression: "userId = :ui",
     ExpressionAttributeValues: {
       ":ui": userId,
     },
   };
   try {
-    const res = await documentClient.query(params).promise();
+    const res = await documentClient.delete(params).promise();
     response = generateResponse.send({ data: res.Items });
   } catch (error) {
     console.log(error);
