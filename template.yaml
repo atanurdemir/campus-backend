@@ -710,10 +710,10 @@ Resources:
       TableName: "Notifications"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: userId
+        - AttributeName: notificationId
           AttributeType: S
       KeySchema:
-        - AttributeName: userId
+        - AttributeName: notificationId
           KeyType: HASH
   DepartmentTable:
     Type: "AWS::DynamoDB::Table"

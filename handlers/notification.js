@@ -3,6 +3,7 @@ AWS.config.update({
   region: "eu-west-1",
 });
 const moment = require("moment");
+const uuid4 = require("uuid4");
 const generateResponse = require("./response");
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
@@ -14,9 +15,10 @@ exports.add = async (event) => {
   const params = {
     TableName: "Notifications",
     Item: {
-      userId,
       title,
+      userId,
       message,
+      notificationId: uuid4(),
       createAt: moment().utc().format("YYYY-MM-DD"),
     },
   };
