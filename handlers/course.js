@@ -36,7 +36,7 @@ exports.add = async (event) => {
   };
   try {
     const res = await documentClient.query(checkParams).promise();
-    if (res.count === 0) {
+    if (res.Count === 0) {
       await documentClient.put(params).promise();
       response = zr.send({});
     } else {
