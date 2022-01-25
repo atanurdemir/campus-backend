@@ -389,10 +389,10 @@ Resources:
             Method: patch
 
   #DepartmentFunctions
-  AddCoursesFunction:
+  AddDepartmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Join ["", ["AddCoursesFunction", !Ref ENV]]
+      FunctionName: !Join ["", ["AddDepartmentFunction", !Ref ENV]]
       Role:
         Fn::GetAtt:
           - LambdaExecutionRole
@@ -407,10 +407,10 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /courses/add
             Method: post
-  CoursesGetFunction:
+  DepartmentGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Join ["", ["CoursesGetFunction", !Ref ENV]]
+      FunctionName: !Join ["", ["DepartmentGetFunction", !Ref ENV]]
       Role:
         Fn::GetAtt:
           - LambdaExecutionRole
@@ -684,6 +684,43 @@ Resources:
             Path: /notification
             Method: get
 
+  TakeCourseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["TakeCourseFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: course.add
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /course/take
+            Method: post
+  CoursesGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["CoursesGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: course.getById
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /course/get
+            Method: get
+
   UsersTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
@@ -800,6 +837,26 @@ Resources:
         - IndexName: "dateIndex"
           KeySchema:
             - AttributeName: createAt
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  CoursesTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: "Courses"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: courseId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: courseId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "userIndex"
+          KeySchema:
+            - AttributeName: userId
               KeyType: HASH
           Projection:
             ProjectionType: ALL
