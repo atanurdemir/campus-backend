@@ -720,6 +720,24 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /course/get
             Method: get
+  CourseDeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["CourseDeleteFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: course.remove
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /course/{courseId}
+            Method: delete
 
   UsersTable:
     Type: "AWS::DynamoDB::Table"
@@ -850,6 +868,8 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: courseName
+          AttributeType: S
       KeySchema:
         - AttributeName: courseId
           KeyType: HASH
@@ -857,6 +877,12 @@ Resources:
         - IndexName: "userIndex"
           KeySchema:
             - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: "nameIndex"
+          KeySchema:
+            - AttributeName: courseName
               KeyType: HASH
           Projection:
             ProjectionType: ALL
