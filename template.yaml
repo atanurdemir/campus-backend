@@ -804,95 +804,95 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-  # WebsiteBucket:
-  #   Type: AWS::S3::Bucket
-  #   Properties:
-  #     AccessControl: PublicRead
-  #     BucketName: !FindInMap [BucketNames, Website, !Ref ENV]
-  #     Tags:
-  #       - Key: Name
-  #         Value: "Campus-Website"
-  # WebsiteBucketPolicy:
-  #   Type: "AWS::S3::BucketPolicy"
-  #   Properties:
-  #     Bucket: !Ref WebsiteBucket
-  #     PolicyDocument:
-  #       Statement:
-  #         - Action:
-  #             - "s3:GetObject"
-  #           Effect: Allow
-  #           Resource:
-  #             "Fn::Join":
-  #               - ""
-  #               - - "arn:aws:s3:::"
-  #                 - Ref: WebsiteBucket
-  #                 - /*
-  #           Principal: "*"
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !FindInMap [BucketNames, Website, !Ref ENV]
+      Tags:
+        - Key: Name
+          Value: "Campus-Website"
+  WebsiteBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "s3:GetObject"
+            Effect: Allow
+            Resource:
+              "Fn::Join":
+                - ""
+                - - "arn:aws:s3:::"
+                  - Ref: WebsiteBucket
+                  - /*
+            Principal: "*"
 
-  # MoodWebsiteCloudFrontDistribution:
-  #   Type: AWS::CloudFront::Distribution
-  #   Properties:
-  #     DistributionConfig:
-  #       CustomErrorResponses:
-  #         - ErrorCachingMinTTL: 60
-  #           ErrorCode: 404
-  #           ResponseCode: 200
-  #           ResponsePagePath: "/index.html"
-  #       CacheBehaviors:
-  #         - AllowedMethods:
-  #             - GET
-  #             - HEAD
-  #             - OPTIONS
-  #           CachedMethods:
-  #             - GET
-  #             - HEAD
-  #             - OPTIONS
-  #           Compress: true
-  #           DefaultTTL: 3600
-  #           MaxTTL: 86400
-  #           MinTTL: 60
-  #           ViewerProtocolPolicy: redirect-to-https
-  #           PathPattern: /
-  #           TargetOriginId: campusWebsiteOrigin
-  #           ForwardedValues:
-  #             Cookies:
-  #               Forward: none
-  #             QueryString: true
-  #       Comment: Campus Website
-  #       DefaultCacheBehavior:
-  #         AllowedMethods:
-  #           - GET
-  #           - HEAD
-  #           - OPTIONS
-  #         CachedMethods:
-  #           - GET
-  #           - HEAD
-  #           - OPTIONS
-  #         Compress: true
-  #         DefaultTTL: 3600
-  #         MaxTTL: 86400
-  #         MinTTL: 60
-  #         TargetOriginId: campusWebsiteOrigin
-  #         ViewerProtocolPolicy: redirect-to-https
-  #         ForwardedValues:
-  #           Cookies:
-  #             Forward: none
-  #           QueryString: true
-  #       DefaultRootObject: index.html
-  #       Enabled: true
-  #       HttpVersion: http2
-  #       PriceClass: "PriceClass_All"
-  #       Origins:
-  #         - Id: campusWebsiteOrigin
-  #           DomainName:
-  #             !Join [
-  #               "",
-  #               [
-  #                 !FindInMap [BucketNames, Website, !Ref ENV],
-  #                 ".s3.",
-  #                 !Ref AWS::Region,
-  #                 ".amazonaws.com",
-  #               ],
-  #             ]
-  #           CustomOriginConfig:
-  #             OriginProtocolPolicy: "http-only"
+  MoodWebsiteCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 60
+            ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: "/index.html"
+        CacheBehaviors:
+          - AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            Compress: true
+            DefaultTTL: 3600
+            MaxTTL: 86400
+            MinTTL: 60
+            ViewerProtocolPolicy: redirect-to-https
+            PathPattern: /
+            TargetOriginId: campusWebsiteOrigin
+            ForwardedValues:
+              Cookies:
+                Forward: none
+              QueryString: true
+        Comment: Campus Website
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          DefaultTTL: 3600
+          MaxTTL: 86400
+          MinTTL: 60
+          TargetOriginId: campusWebsiteOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: true
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        PriceClass: "PriceClass_All"
+        Origins:
+          - Id: campusWebsiteOrigin
+            DomainName:
+              !Join [
+                "",
+                [
+                  !FindInMap [BucketNames, Website, !Ref ENV],
+                  ".s3.",
+                  !Ref AWS::Region,
+                  ".amazonaws.com",
+                ],
+              ]
+            CustomOriginConfig:
+              OriginProtocolPolicy: "http-only"
