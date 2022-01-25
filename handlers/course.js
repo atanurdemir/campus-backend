@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 AWS.config.update({
   region: "eu-west-1",
 });
+const uuid4 = require("uuid4");
 const moment = require("moment");
 const generateResponse = require("./response");
 const documentClient = new AWS.DynamoDB.DocumentClient();
@@ -16,6 +17,7 @@ exports.add = async (event) => {
     TableName: "Courses",
     Item: {
       userId,
+      courseId: uuid4(),
       courseName,
       courseCode,
       courseCredit,
