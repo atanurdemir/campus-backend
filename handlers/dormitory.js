@@ -8,7 +8,8 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 
 exports.add = async (event) => {
   let response;
-  const { userId, type, capacity } = JSON.parse(event.body);
+  const { userId } = event.requestContext.authorizer;
+  const { type, capacity } = JSON.parse(event.body);
   const params = {
     TableName: "Dormitories",
     Item: {
