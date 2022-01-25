@@ -15,7 +15,7 @@ exports.add = async (event) => {
     Item: {
       type,
       userId,
-      capacity,
+      capacity: Number(capacity),
       isApproved: false,
       createAt: moment().utc().format(),
     },
