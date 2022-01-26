@@ -497,6 +497,42 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /cafeteria
             Method: get
+  AddReservationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["AddReservationFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.addReservation
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeteria/addreserv
+            Method: post
+  ReservationGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["ReservationGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.getReservation
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeteria/{cafeteriaId}
+            Method: get
 
   #DormitoryFunctions
   RequestDormitoryFunction:
@@ -855,6 +891,26 @@ Resources:
         - IndexName: "dateIndex"
           KeySchema:
             - AttributeName: createAt
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  ReservationTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: "Reservations"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: cafeteriaId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: "cafeteriaIndex"
+          KeySchema:
+            - AttributeName: cafeteriaId
               KeyType: HASH
           Projection:
             ProjectionType: ALL
