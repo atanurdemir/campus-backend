@@ -8,8 +8,16 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 
 exports.add = async (event) => {
   let response;
-  const { userId } = event.requestContext.authorizer;
+  const zr = Object.create(generateResponse);
   const { type, capacity } = JSON.parse(event.body);
+  const { userId } = event.requestContext.authorizer;
+
+  const checkParams = {
+    TableName: "Dormitories",
+    Key: {
+      userId,
+    },
+  };
   const params = {
     TableName: "Dormitories",
     Item: {
@@ -21,11 +29,16 @@ exports.add = async (event) => {
     },
   };
   try {
-    await documentClient.put(params).promise();
-    response = generateResponse.send({});
+    const res = await documentClient.get(checkParams).promise();
+    if (!res.Item) {
+      await documentClient.put(params).promise();
+      response = zr.send({});
+    } else {
+      response = zr.message("You have already applied!").send();
+    }
   } catch (error) {
     console.log(JSON.stringify(error));
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -36,6 +49,8 @@ exports.add = async (event) => {
 
 exports.getById = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
+
   const { userId } = event.pathParameters;
   const params = {
     TableName: "Dormitories",
@@ -45,10 +60,10 @@ exports.getById = async (event) => {
   };
   try {
     const res = await documentClient.get(params).promise();
-    response = generateResponse.send({ data: res.Item });
+    response = zr.send({ data: res.Item });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -59,7 +74,9 @@ exports.getById = async (event) => {
 
 exports.getByParameters = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { type, capacity } = event.queryStringParameters;
+
   const params = {
     TableName: "Dormitories",
     IndexName: "typeIndex",
@@ -75,13 +92,13 @@ exports.getByParameters = async (event) => {
   };
   try {
     const res = await documentClient.query(params).promise();
-    response = generateResponse.send({
+    response = zr.send({
       data: res.Items,
       totalCount: res.Items.length,
     });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -93,6 +110,8 @@ exports.getByParameters = async (event) => {
 exports.approve = async (event) => {
   let response;
   const { userId } = event.pathParameters;
+  const zr = Object.create(generateResponse);
+
   const params = {
     TableName: "Dormitories",
     Key: {
@@ -105,10 +124,10 @@ exports.approve = async (event) => {
   };
   try {
     await documentClient.update(params).promise();
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
