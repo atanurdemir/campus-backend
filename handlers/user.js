@@ -105,10 +105,11 @@ exports.signin = async (event) => {
           expiresIn: "30 days",
         });
         response = zr.send({
-          userId: checkUser.Items[0].userId,
-          email: checkUser.Items[0].email,
-          role: checkUser.Items[0].role,
           token: token,
+          email: checkUser.Items[0].email,
+          userId: checkUser.Items[0].userId,
+          fullname:
+            checkUser.Items[0].firstName + " " + checkUser.Items[0].lastName,
         });
       } else {
         response = zr.message("Incorrect password!").send();
