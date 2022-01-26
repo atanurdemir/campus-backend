@@ -11,9 +11,15 @@ exports.add = async (event) => {
   let response;
   const zr = Object.create(generateResponse);
   const { userId } = event.requestContext.authorizer;
-  const { courseName, courseCode, courseCredit, courseTeacher } = JSON.parse(
-    event.body
-  );
+  const {
+    courseName,
+    courseCode,
+    courseDays,
+    courseHours,
+    courseQuota,
+    courseCredit,
+    courseTeacher,
+  } = JSON.parse(event.body);
   const checkParams = {
     TableName: "Courses",
     IndexName: "nameIndex",
@@ -28,6 +34,9 @@ exports.add = async (event) => {
       userId,
       courseName,
       courseCode,
+      courseDays,
+      courseQuota,
+      courseHours,
       courseCredit,
       courseTeacher,
       courseId: uuid4(),
