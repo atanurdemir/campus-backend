@@ -60,7 +60,7 @@ exports.remove = async (event) => {
   let response;
   const { notificationId } = event.pathParameters;
   const params = {
-    TableName: "Courses",
+    TableName: "Notifications",
     Key: {
       notificationId,
     },
