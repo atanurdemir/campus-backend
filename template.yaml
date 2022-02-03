@@ -202,7 +202,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "tracking-lambda-execution-role"
+      RoleName: "campus-lambda-execution-role"
       AssumeRolePolicyDocument:
         Statement:
           - Action:
@@ -719,6 +719,24 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /notification
             Method: get
+  NotificationDeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["NotificationDeleteFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: notification.remove
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /notification/{notificationId}
+            Method: delete
 
   TakeCourseFunction:
     Type: AWS::Serverless::Function

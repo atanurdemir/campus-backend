@@ -55,3 +55,26 @@ exports.get = async () => {
   }
   return response;
 };
+
+exports.remove = async (event) => {
+  let response;
+  const { notificationId } = event.pathParameters;
+  const params = {
+    TableName: "Courses",
+    Key: {
+      notificationId,
+    },
+  };
+  try {
+    const res = await documentClient.delete(params).promise();
+    response = generateResponse.send({ data: res.Items });
+  } catch (error) {
+    console.log(error);
+    response = generateResponse
+      .message(
+        "User could not be accessed due to connection issues to the Campus Services!"
+      )
+      .send();
+  }
+  return response;
+};
