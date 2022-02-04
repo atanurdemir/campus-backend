@@ -625,6 +625,24 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /dormitory/approve/{userId}
             Method: patch
+  GetAllDormsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["GetAllDormsFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: dormitory.getAll
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /dormitory/all
+            Method: get
 
   #FinanceFunctions
   AddStudentFinanceFunction:

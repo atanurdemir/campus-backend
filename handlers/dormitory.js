@@ -135,3 +135,24 @@ exports.approve = async (event) => {
   }
   return response;
 };
+
+exports.getAll = async (event) => {
+  let response;
+  const zr = Object.create(generateResponse);
+
+  const params = {
+    TableName: "Dormitories",
+  };
+  try {
+    const res = await documentClient.scan(params).promise();
+    response = zr.send({ data: res.Items });
+  } catch (error) {
+    console.log(error);
+    response = zr
+      .message(
+        "User could not be accessed due to connection issues to the Campus Services!"
+      )
+      .send();
+  }
+  return response;
+};
