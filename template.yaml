@@ -639,12 +639,13 @@ Resources:
       Handler: finance.add
       Runtime: nodejs14.x
       Events:
-        Root:
-          Type: Api
+        DDBEvent:
+          Type: DynamoDB
           Properties:
-            RestApiId: !Ref CampusApi
-            Path: /finance/add
-            Method: post
+            Stream: !GetAtt UsersTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+            Enabled: true
   GetStudentFinanceFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -816,6 +817,8 @@ Resources:
     Properties:
       TableName: "Users"
       BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
       AttributeDefinitions:
         - AttributeName: userId
           AttributeType: S

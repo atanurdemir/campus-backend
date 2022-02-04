@@ -7,30 +7,30 @@ const generateResponse = require("./response");
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
 exports.add = async (event) => {
-  let response;
-  const { userId, isPaid, noSemester, scholarship } = JSON.parse(event.body);
-  const params = {
-    TableName: "Finances",
-    Item: {
-      userId,
-      isPaid,
-      noSemester,
-      scholarship,
-      createAt: moment().utc().format(),
-    },
-  };
-  try {
-    await documentClient.put(params).promise();
-    response = generateResponse.send({});
-  } catch (error) {
-    console.log(JSON.stringify(error));
-    response = generateResponse
-      .message(
-        "User could not be accessed due to connection issues to the Campus Services!"
-      )
-      .send();
+  if (event.Records.length > 0) {
+    for (let i = 0; i < event.Records.length; i++) {
+      const element = event.Records[i];
+      try {
+        if (element.eventName === "INSERT") {
+          console.log(JSON.stringify(element));
+          const params = {
+            TableName: "Finances",
+            Item: {
+              userId: element.dynamodb.NewImage.userId.S,
+              isPaid: false,
+              noSemester: element.dynamodb.NewImage.uni.M.semester.S,
+              scholarship: element.dynamodb.NewImage.uni.M.scholar.S,
+              createAt: moment().utc().format(),
+            },
+          };
+          await documentClient.put(params).promise();
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
-  return response;
+  return true;
 };
 
 exports.get = async (event) => {
