@@ -168,3 +168,28 @@ exports.getReservation = async (event) => {
   }
   return response;
 };
+
+exports.getReservations = async (event) => {
+  let response;
+  const { cafeteriaId } = event.pathParameters;
+  const params = {
+    TableName: "Reservations",
+    IndexName: "cafeteriaIndex",
+    KeyConditionExpression: "cafeteriaId = :id",
+    ExpressionAttributeValues: {
+      ":id": cafeteriaId,
+    },
+  };
+  try {
+    const res = await documentClient.query(params).promise();
+    response = generateResponse.send({ data: res.Items });
+  } catch (error) {
+    console.log(error);
+    response = generateResponse
+      .message(
+        "User could not be accessed due to connection issues to the Campus Services!"
+      )
+      .send();
+  }
+  return response;
+};

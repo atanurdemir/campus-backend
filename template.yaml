@@ -533,6 +533,24 @@ Resources:
             RestApiId: !Ref CampusApi
             Path: /cafeteria/{cafeteriaId}
             Method: get
+  ReservationsGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["", ["ReservationsGetFunction", !Ref ENV]]
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      CodeUri: handlers/
+      Handler: cafeteria.getReservations
+      Runtime: nodejs14.x
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CampusApi
+            Path: /cafeterias/{cafeteriaId}
+            Method: get
 
   #DormitoryFunctions
   RequestDormitoryFunction:
