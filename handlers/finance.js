@@ -36,6 +36,7 @@ exports.add = async (event) => {
 exports.get = async (event) => {
   let response;
   const { userId } = event.pathParameters;
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Finances",
     Key: {
@@ -44,10 +45,10 @@ exports.get = async (event) => {
   };
   try {
     const res = await documentClient.get(params).promise();
-    response = generateResponse.send({ data: res.Item });
+    response = zr.send({ data: res.Item });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -58,6 +59,7 @@ exports.get = async (event) => {
 
 exports.getUnpaids = async () => {
   let response;
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Finances",
     IndexName: "paidIndex",
@@ -68,10 +70,10 @@ exports.getUnpaids = async () => {
   };
   try {
     const res = await documentClient.query(params).promise();
-    response = generateResponse.send({ data: res.Items });
+    response = zr.send({ data: res.Items });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -83,6 +85,7 @@ exports.getUnpaids = async () => {
 exports.approve = async (event) => {
   let response;
   const { userId } = event.pathParameters;
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Finances",
     Key: {
@@ -95,10 +98,10 @@ exports.approve = async (event) => {
   };
   try {
     await documentClient.update(params).promise();
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )

@@ -58,6 +58,7 @@ exports.get = async () => {
 
 exports.remove = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { notificationId } = event.pathParameters;
   const params = {
     TableName: "Notifications",
@@ -67,10 +68,10 @@ exports.remove = async (event) => {
   };
   try {
     const res = await documentClient.delete(params).promise();
-    response = generateResponse.send({ data: res.Items });
+    response = zr.send({ data: res.Items });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )

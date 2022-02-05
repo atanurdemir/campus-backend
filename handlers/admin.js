@@ -84,6 +84,7 @@ exports.signup = async (event) => {
 exports.getStudent = async (event) => {
   let response;
   const { email } = event.pathParameters;
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Users",
     IndexName: "emailIndex",
@@ -94,10 +95,10 @@ exports.getStudent = async (event) => {
   };
   try {
     const res = await documentClient.query(params).promise();
-    response = generateResponse.send({ data: res.Items });
+    response = zr.send({ data: res.Items });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -109,7 +110,7 @@ exports.getStudent = async (event) => {
 exports.updateStudent = async (event) => {
   let response;
   const { userId } = event.pathParameters;
-  //TODO: const { adminId } = event.requestContext.authorizer;
+  const zr = Object.create(generateResponse);
   const {
     idNo,
     email,
@@ -150,10 +151,10 @@ exports.updateStudent = async (event) => {
   };
   try {
     await documentClient.update(params).promise();
-    response = generateResponse.send();
+    response = zr.send();
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be updated due to connection issues to the Campus Services!"
       )

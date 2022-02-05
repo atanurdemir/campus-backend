@@ -132,6 +132,7 @@ exports.signin = async (event) => {
 
 exports.getMe = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { userId } = event.requestContext.authorizer;
   const params = {
     TableName: "Users",
@@ -141,10 +142,10 @@ exports.getMe = async (event) => {
   };
   try {
     const res = await documentClient.get(params).promise();
-    response = generateResponse.send({ data: res.Item });
+    response = zr.send({ data: res.Item });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -155,6 +156,7 @@ exports.getMe = async (event) => {
 
 exports.updateUser = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { userId } = event.requestContext.authorizer;
   const { email, password } = JSON.parse(event.body);
   const updateAt = new Date().toISOString().split("T")[0];
@@ -174,10 +176,10 @@ exports.updateUser = async (event) => {
   };
   try {
     await documentClient.update(params).promise();
-    response = generateResponse.send();
+    response = zr.send();
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be updated due to connection issues to the Campus Services!"
       )

@@ -9,6 +9,7 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 exports.add = async (event) => {
   let response;
   const { name } = JSON.parse(event.body);
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Cafeterias",
     Item: {
@@ -21,10 +22,10 @@ exports.add = async (event) => {
   };
   try {
     await documentClient.put(params).promise();
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(JSON.stringify(error));
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -35,6 +36,7 @@ exports.add = async (event) => {
 
 exports.addCron = async () => {
   let response;
+  const zr = Object.create(generateResponse);
   const names = ["Dining Hall", "Starbucks"];
   const params = {
     TableName: "Cafeterias",
@@ -51,10 +53,10 @@ exports.addCron = async () => {
       params.Item["name"] = names[i];
       await documentClient.put(params).promise();
     }
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(JSON.stringify(error));
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -65,6 +67,7 @@ exports.addCron = async () => {
 
 exports.reserve = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { cafeteriaId } = JSON.parse(event.body);
   const params = {
     TableName: "Cafeterias",
@@ -78,10 +81,10 @@ exports.reserve = async (event) => {
   };
   try {
     await documentClient.update(params).promise();
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -92,6 +95,7 @@ exports.reserve = async (event) => {
 
 exports.get = async () => {
   let response;
+  const zr = Object.create(generateResponse);
   const params = {
     TableName: "Cafeterias",
     IndexName: "dateIndex",
@@ -105,10 +109,10 @@ exports.get = async () => {
   };
   try {
     const res = await documentClient.query(params).promise();
-    response = generateResponse.send({ data: res.Items });
+    response = zr.send({ data: res.Items });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -119,6 +123,7 @@ exports.get = async () => {
 
 exports.addReservation = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { cafeteriaId } = JSON.parse(event.body);
   const { userId } = event.requestContext.authorizer;
   const params = {
@@ -131,10 +136,10 @@ exports.addReservation = async (event) => {
   };
   try {
     await documentClient.put(params).promise();
-    response = generateResponse.send({});
+    response = zr.send({});
   } catch (error) {
     console.log(JSON.stringify(error));
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -145,8 +150,9 @@ exports.addReservation = async (event) => {
 
 exports.getReservation = async (event) => {
   let response;
-  const { userId } = event.requestContext.authorizer;
+  const zr = Object.create(generateResponse);
   const { cafeteriaId } = event.pathParameters;
+  const { userId } = event.requestContext.authorizer;
   const params = {
     TableName: "Reservations",
     Key: { userId: userId + "?" + moment().utc().format("YYYY-MM-DD") },
@@ -157,10 +163,10 @@ exports.getReservation = async (event) => {
   };
   try {
     const res = await documentClient.get(params).promise();
-    response = generateResponse.send({ data: res.Item });
+    response = zr.send({ data: res.Item });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
@@ -171,6 +177,7 @@ exports.getReservation = async (event) => {
 
 exports.getReservations = async (event) => {
   let response;
+  const zr = Object.create(generateResponse);
   const { cafeteriaId } = event.pathParameters;
   const params = {
     TableName: "Reservations",
@@ -182,10 +189,10 @@ exports.getReservations = async (event) => {
   };
   try {
     const res = await documentClient.query(params).promise();
-    response = generateResponse.send({ data: res.Items });
+    response = zr.send({ data: res.Items });
   } catch (error) {
     console.log(error);
-    response = generateResponse
+    response = zr
       .message(
         "User could not be accessed due to connection issues to the Campus Services!"
       )
